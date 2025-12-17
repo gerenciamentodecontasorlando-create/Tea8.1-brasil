@@ -2,94 +2,104 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Barto — Falar Ajuda (PWA)</title>
-
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b1020" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TEA Bike — Cidade Cartoon (MVP)</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logoDot"></div>
-      <div>
-        <div class="title">Barto — Falar Ajuda</div>
-        <div class="subtitle">Jogo retrô para aprender comunicação em momentos difíceis</div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <strong>TEA Bike</strong>
+        <span class="muted">Cidade cartoon 90s • MVP</span>
       </div>
-    </div>
-
-    <div class="topActions">
-      <button id="btnInstall" class="btn ghost" hidden>Instalar</button>
-      <button id="btnReset" class="btn ghost" title="Reiniciar">Reiniciar</button>
-    </div>
-  </header>
-
-  <main class="wrap">
-    <section class="panel gamePanel">
-      <div class="hud">
-        <div class="pill" id="hudPhase">Fase: —</div>
-        <div class="pill" id="hudGoal">Objetivo: Pedir passagem com educação</div>
-        <div class="pill" id="hudMode">Modo: Jogo</div>
+      <div class="hint">
+        <span>Teclado: ← → (ou A/D) • Espaço: interagir</span>
       </div>
+    </header>
 
-      <canvas id="game" width="960" height="540" aria-label="Jogo"></canvas>
-
-      <div class="helpRow">
-        <div class="hint">
-          <span class="k">Controles:</span> ← → (mover) • Espaço (interagir) • Toque nos botões na fase de conversa
+    <section class="game-wrap">
+      <div id="game" class="game" tabindex="0" aria-label="Área do jogo">
+        <!-- HUD -->
+        <div class="hud">
+          <div class="hud-pill" id="hudStatus">Ande até uma casa e aperte Espaço</div>
+          <div class="hud-pill small" id="hudPos">x: 0</div>
         </div>
 
-        <div class="ttsControls">
-          <label class="small">
-            Voz:
-            <select id="voiceSelect"></select>
-          </label>
+        <!-- Scene layers -->
+        <div class="scene" id="scene">
+          <div class="layer sky"></div>
+          <div class="layer far" id="layerFar"></div>
+          <div class="layer mid" id="layerMid"></div>
+          <div class="layer near" id="layerNear"></div>
 
-          <label class="small">
-            Velocidade:
-            <input id="rate" type="range" min="0.6" max="1.2" step="0.05" value="0.9" />
-          </label>
+          <!-- Street / ground -->
+          <div class="ground">
+            <div class="road">
+              <div class="lane"></div>
+            </div>
+            <div class="sidewalk"></div>
+          </div>
 
-          <label class="small">
-            Tom:
-            <input id="pitch" type="range" min="0.8" max="1.2" step="0.05" value="1.0" />
-          </label>
+          <!-- Player -->
+          <div id="player" class="player" aria-label="Personagem">
+            <div class="bike">
+              <div class="head"></div>
+              <div class="body"></div>
+              <div class="wheel w1"></div>
+              <div class="wheel w2"></div>
+            </div>
+          </div>
+
+          <!-- Hotspots (casas/locais) -->
+          <div class="hotspot" data-id="casa1" style="left: 480px;"></div>
+          <div class="hotspot" data-id="escola" style="left: 1200px;"></div>
+          <div class="hotspot" data-id="parque" style="left: 1900px;"></div>
+        </div>
+
+        <!-- Dialog -->
+        <div class="dialog" id="dialog" hidden>
+          <div class="dialog-card">
+            <div class="dialog-title" id="dialogTitle">Situação</div>
+            <div class="dialog-text" id="dialogText"></div>
+
+            <div class="choices" id="choices"></div>
+
+            <div class="dialog-actions">
+              <button class="btn ghost" id="btnClose" type="button">Fechar (Esc)</button>
+              <button class="btn" id="btnSpeak" type="button">Ouvir situação</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Touch controls -->
+        <div class="touch" aria-label="Controles por toque">
+          <button class="tbtn" id="leftBtn" type="button">⬅️</button>
+          <button class="tbtn" id="actBtn" type="button">🤝</button>
+          <button class="tbtn" id="rightBtn" type="button">➡️</button>
         </div>
       </div>
+
+      <aside class="panel">
+        <h2>Como jogar</h2>
+        <ul>
+          <li>Clique no quadro do jogo pra dar foco.</li>
+          <li>Ande com ← → (ou A/D).</li>
+          <li>Chegue perto de um local e aperte <b>Espaço</b> (ou 🤝).</li>
+          <li>Escolha uma resposta e veja o reforço.</li>
+        </ul>
+
+        <div class="note">
+          Dica: pra ficar “Simpsons-like”, a mágica é <b>camadas</b> + <b>contorno</b> + <b>cores chapadas</b>.
+        </div>
+      </aside>
     </section>
 
-    <section class="panel rightPanel">
-      <div class="sectionTitle">Situação</div>
-      <div id="situationText" class="situationText">Carregando…</div>
-
-      <div class="sectionTitle">Como Barto está se sentindo?</div>
-      <div id="emotionRow" class="chips"></div>
-
-      <div class="sectionTitle">O que Barto pode dizer agora?</div>
-      <div id="phraseRow" class="choices"></div>
-
-      <div class="row">
-        <button id="btnSpeakSituation" class="btn">Ouvir situação</button>
-        <button id="btnSpeakSelected" class="btn ghost">Ouvir frase escolhida</button>
-      </div>
-
-      <div class="sectionTitle">Reforço</div>
-      <div id="feedback" class="feedback muted">Escolha uma emoção e uma frase. O jogo nunca “pune”.</div>
-
-      <div class="divider"></div>
-
-      <div class="small muted">
-        <b>Dica terapêutica:</b> repita a mesma fase mais de uma vez. A repetição ajuda a “automatizar” a comunicação.
-      </div>
-    </section>
+    <footer class="footer">
+      <span class="muted">Base offline-friendly. Depois a gente encaixa PWA (manifest + sw).</span>
+    </footer>
   </main>
-
-  <footer class="footer">
-    <span class="muted">Offline-first • PWA • Canvas • TTS</span>
-  </footer>
 
   <script src="app.js"></script>
 </body>
